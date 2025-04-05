@@ -2,18 +2,14 @@ package com.example.myevent_be.service;
 
 import com.example.myevent_be.entity.UserVerificationRequest;
 import com.example.myevent_be.enums.VerificationType;
-import com.example.myevent_be.repository.UserVerificationRequestRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 

@@ -17,7 +17,9 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "Unauthorized", HttpStatus.UNAUTHORIZED),
     EVENTTYPE_EXISTED(1008, "Event type existed", HttpStatus.BAD_REQUEST),
-    EVENT_TYPE_NOT_FOUND(1009, "Event type not found", HttpStatus.BAD_REQUEST)
+    EVENT_TYPE_NOT_FOUND(1009, "Event type not found", HttpStatus.BAD_REQUEST),
+    CONTRACT_ALREADY_EXISTED(1010, "Contract already exists with this Payment Intent ID", HttpStatus.BAD_REQUEST),
+    CONTRACT_NOT_FOUND(1011,"CONTRACT_NOT_FOUND",HttpStatus.BAD_REQUEST)
     ;
 
     int code;

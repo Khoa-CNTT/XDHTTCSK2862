@@ -19,7 +19,11 @@ public enum ErrorCode {
     EVENTTYPE_EXISTED(1008, "Event type existed", HttpStatus.BAD_REQUEST),
     EVENT_TYPE_NOT_FOUND(1009, "Event type not found", HttpStatus.BAD_REQUEST),
     CONTRACT_ALREADY_EXISTED(1010, "Contract already exists with this Payment Intent ID", HttpStatus.BAD_REQUEST),
-    CONTRACT_NOT_FOUND(1011,"CONTRACT_NOT_FOUND",HttpStatus.BAD_REQUEST)
+    CONTRACT_NOT_FOUND(1011,"CONTRACT_NOT_FOUND",HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_FOUND(1012, "Email not found", HttpStatus.NOT_FOUND),
+    INVALID_TOKEN(1013, "Invalid or expired reset token", HttpStatus.BAD_REQUEST),
+    TOKEN_EXPIRED(1014, "Reset token has expired", HttpStatus.BAD_REQUEST),
+    PASSWORD_MISMATCH(1015, "New password and confirm password do not match", HttpStatus.BAD_REQUEST)
     ;
 
     int code;

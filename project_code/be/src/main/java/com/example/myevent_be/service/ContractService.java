@@ -8,58 +8,91 @@ import com.example.myevent_be.exception.AppException;
 import com.example.myevent_be.exception.ErrorCode;
 import com.example.myevent_be.mapper.ContractMapper;
 import com.example.myevent_be.repository.ContractRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
-
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ContractService {
-    ContractRepository contractRepository;
-    ContractMapper contractMapper;
+    private final ContractRepository contractRepository;
+    private final ContractMapper contractMapper;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ContractResponse createContract(ContractRequest contractRequest) {
-        String paymentIntentIdStr = contractRequest.getPaymentIntentId().toString();
-        if (contractRepository.existsByPaymentIntentId(paymentIntentIdStr)) {
-            throw new AppException(ErrorCode.CONTRACT_ALREADY_EXISTED);
-        }
+        log.info("Creating contract with payment intent id: {}", contractRequest.getPaymentIntentId());
+        
+        // Kiểm tra contract đã tồn tại chưa
+        UUID paymentIntentId = contractRequest.getPaymentIntentId();
+        contractRepository.findByPaymentIntentId(paymentIntentId)
+                .ifPresent(contract -> {
+                    log.warn("Contract already exists with payment intent id: {}", paymentIntentId);
+                    throw new AppException(ErrorCode.CONTRACT_ALREADY_EXISTED);
+                });
+
+        // Tạo contract mới
         Contract contract = contractMapper.toContract(contractRequest);
         Contract savedContract = contractRepository.save(contract);
+        log.info("Created contract with id: {}", savedContract.getId());
+        
         return contractMapper.toContractResponse(savedContract);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<ContractResponse> getContracts() {
-        return contractRepository.findAll().stream()
-                .map(contractMapper::toContractResponse)
-                .toList();
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority();
+        if (role.equals("ADMIN")) {
+            return contractRepository.findAll().stream()
+                    .map(contractMapper::toContractResponse)
+                    .toList();
+        } else {
+            String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+            return contractRepository.findByCustomerId(userId).stream()
+                    .map(contractMapper::toContractResponse)
+                    .toList();
+        }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public ContractResponse getContractById(String contractId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
 
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority();
+        if (!role.equals("ADMIN")) {
+            String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+            if (!contract.getCustomer().getId().equals(userId)) {
+                throw new AppException(ErrorCode.CONTRACT_NOT_FOUND);
+            }
+        }
+
         return contractMapper.toContractResponse(contract);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ContractResponse updateContract(String contractId, ContractUpdateRequest contractUpdateRequest) {
         Contract existingContract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
         contractMapper.updateContract(existingContract, contractUpdateRequest);
-        contractRepository.save(existingContract);
-        return contractMapper.toContractResponse(existingContract);
+        Contract updatedContract = contractRepository.save(existingContract);
+        return contractMapper.toContractResponse(updatedContract);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public void deleteContract(String contractId) {
         if (!contractRepository.existsById(contractId)) {
             throw new AppException(ErrorCode.CONTRACT_NOT_FOUND);
         }
-
         contractRepository.deleteById(contractId);
+    }
+
+    public ContractResponse getContractByPaymentIntentId(UUID paymentIntentId) {
+        return contractRepository.findByPaymentIntentId(paymentIntentId)
+                .map(contractMapper::toContractResponse)
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
     }
 }

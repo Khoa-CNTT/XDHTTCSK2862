@@ -12,14 +12,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/contracts")
 @RequiredArgsConstructor
 public class ContractController {
     private final ContractService contractService;
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
+    //@PreAuthorize("hasAuthority('USER')")
     public ApiResponse<ContractResponse> createContract(@RequestBody @Valid ContractRequest contractRequest) {
         ContractResponse contractResponse = contractService.createContract(contractRequest);
         return ApiResponse.<ContractResponse>builder()
@@ -27,8 +29,17 @@ public class ContractController {
                 .build();
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping
+    //@PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ApiResponse<List<ContractResponse>> getContracts() {
+        List<ContractResponse> contracts = contractService.getContracts();
+        return ApiResponse.<List<ContractResponse>>builder()
+                .result(contracts)
+                .build();
+    }
+
     @GetMapping("/{contractId}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ApiResponse<ContractResponse> getContractById(@PathVariable String contractId) {
         ContractResponse contractResponse = contractService.getContractById(contractId);
         return ApiResponse.<ContractResponse>builder()
@@ -36,8 +47,8 @@ public class ContractController {
                 .build();
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{contractId}")
+    //@PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<ContractResponse> updateContract(@PathVariable String contractId, @RequestBody @Valid ContractUpdateRequest contractUpdateRequest) {
         ContractResponse contractResponse = contractService.updateContract(contractId, contractUpdateRequest);
         return ApiResponse.<ContractResponse>builder()
@@ -45,8 +56,8 @@ public class ContractController {
                 .build();
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{contractId}")
+    //@PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Void> deleteContract(@PathVariable String contractId) {
         contractService.deleteContract(contractId);
         return ApiResponse.<Void>builder()

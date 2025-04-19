@@ -45,6 +45,26 @@ public class ApplicationInitConfig {
                             return roleRepository.save(newRole);
                         });
 
+                // Kiểm tra nếu role SUPPLIER chưa tồn tại, nếu không có thì tạo
+                Role supplierRole = roleRepository.findByName("SUPPLIER")
+                        .orElseGet(() -> {
+                            // Tạo vai trò SUPPLIER nếu chưa tồn tại
+                            log.info("Role SUPPLIER chưa tồn tại, tiến hành tạo mới...");
+                            Role newRole = new Role();
+                            newRole.setName("SUPPLIER");
+                            return roleRepository.save(newRole);
+                        });
+
+                // Kiểm tra nếu role SUPPLIER chưa tồn tại, nếu không có thì tạo
+                Role managerRole = roleRepository.findByName("MANAGER")
+                        .orElseGet(() -> {
+                            // Tạo vai trò MANAGER nếu chưa tồn tại
+                            log.info("Role MANAGER chưa tồn tại, tiến hành tạo mới...");
+                            Role newRole = new Role();
+                            newRole.setName("MANAGER");
+                            return roleRepository.save(newRole);
+                        });
+
                 // Tạo người dùng mới với vai trò ADMIN
                 User user = User.builder()
                         .first_name("admin")

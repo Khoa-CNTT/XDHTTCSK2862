@@ -48,4 +48,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     Set<Token> tokens;
+
+    @OneToMany(mappedBy = "id")
+    Set<Device> devices;
 }

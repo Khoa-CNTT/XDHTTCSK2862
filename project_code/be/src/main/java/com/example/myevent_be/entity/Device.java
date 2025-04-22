@@ -46,4 +46,8 @@ public class Device {
     @ManyToOne
     @JoinColumn(name = "device_type_id", referencedColumnName = "id", nullable = false  , columnDefinition = "VARCHAR(255) DEFAULT 'DEFAULT_TYPE_ID'")
     Device_Type device_type;
+
+    @ManyToOne
+    @JoinColumn(name="userid",referencedColumnName = "id",nullable = false,columnDefinition = "VARCHAR(255) DEFAULT 'DEFAULT_TYPE_ID'")
+    User user;
 }

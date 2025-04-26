@@ -1,7 +1,7 @@
 package com.example.myevent_be.controller;
 
 import com.example.myevent_be.dto.response.ApiResponse;
-import com.example.myevent_be.repository.IStorageService;
+import com.example.myevent_be.service.ImageStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,15 +15,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:5500"}, allowCredentials = "true")
 @RequestMapping("/api/v1/FileUpload")
 public class FileUploadController {
 
     @Autowired
-    private IStorageService storageService;
+    private ImageStorageService storageService;
 
     @PostMapping("")
-    public ResponseEntity<ApiResponse> uploadFile(@RequestParam("file")MultipartFile file){
+    public ResponseEntity<ApiResponse> uploadFile(@RequestParam("file")MultipartFile file) {
         try {
             String generatedFileName = storageService.storeFile(file);
             return ResponseEntity.status(HttpStatus.OK).body(
@@ -37,7 +37,7 @@ public class FileUploadController {
     }
 
     @GetMapping("/files/{fileName:.+}")
-    public ResponseEntity<?> readDetailFile(@PathVariable String fileName){
+    public ResponseEntity<?> readDetailFile(@PathVariable String fileName) {
         try {
             byte[] bytes = storageService.readFileContent(fileName);
             if (bytes == null || bytes.length == 0) {
@@ -49,16 +49,42 @@ public class FileUploadController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.IMAGE_JPEG);
             headers.setContentLength(bytes.length);
-            headers.set("Access-Control-Allow-Origin", "*");
+            headers.set("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
             headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             headers.set("Access-Control-Allow-Headers", "*");
+            headers.set("Access-Control-Allow-Credentials", "true");
 
             return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
-        }
-        catch (Exception exception){
+        } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new ApiResponse(9999, "Error reading file: " + exception.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/avatar/{fileName:.+}")
+    public ResponseEntity<?> getAvatar(@PathVariable String fileName) {
+        try {
+            byte[] bytes = storageService.readFileContent(fileName);
+            if (bytes == null || bytes.length == 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(new ApiResponse(9999, "Avatar not found: " + fileName, null));
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+            headers.setContentLength(bytes.length);
+            headers.set("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+            headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            headers.set("Access-Control-Allow-Headers", "*");
+            headers.set("Access-Control-Allow-Credentials", "true");
+
+            return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ApiResponse(9999, "Error reading avatar: " + exception.getMessage(), null));
         }
     }
 

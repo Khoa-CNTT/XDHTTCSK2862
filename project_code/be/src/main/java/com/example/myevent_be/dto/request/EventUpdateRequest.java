@@ -20,5 +20,6 @@ public class EventUpdateRequest {
     String online_link;
     String invitation_link;
     String event_id;
+    String event_type_id;
 
 }

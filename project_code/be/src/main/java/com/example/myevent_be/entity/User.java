@@ -51,4 +51,7 @@ public class User {
 
     @OneToMany(mappedBy = "id")
     Set<Device> devices;
+
+    @OneToMany(mappedBy = "id")
+    Set<Service> services;
 }

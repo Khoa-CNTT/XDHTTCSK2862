@@ -2,6 +2,7 @@ package com.example.myevent_be.service;
 
 import com.example.myevent_be.entity.UserVerificationRequest;
 import com.example.myevent_be.enums.VerificationType;
+import com.example.myevent_be.repository.UserVerificationRequestRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AccessLevel;
@@ -78,8 +79,8 @@ public class UserVerificationService {
                 .email(email)
                 .code(code)
                 .data(data)
-                .expiration_time(expirationTime)
-                .type(type)
+                .expirationTime(expirationTime)
+                .type(String.valueOf(type))
                 .build();
         userVerificationRequestRepository.save(request);
 

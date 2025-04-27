@@ -2,6 +2,7 @@ package com.example.myevent_be.configuration;
 
 import com.example.myevent_be.entity.Role;
 import com.example.myevent_be.entity.User;
+
 import com.example.myevent_be.repository.RoleRepository;
 import com.example.myevent_be.repository.UserRepository;
 import lombok.AccessLevel;

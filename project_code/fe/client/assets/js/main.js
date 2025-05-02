@@ -19,7 +19,7 @@ function highlightActiveMenu() {
 
 document.addEventListener("DOMContentLoaded", function () {
   // Import header
-  fetch("./component/header.html")
+  fetch("../component/header.html")
       .then(response => response.text())
       .then(data => {
           document.getElementById("header").innerHTML = data;
@@ -28,31 +28,13 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
   // Import footer
-  fetch("./component/footer.html")
+  fetch("../component/footer.html")
       .then(response => response.text())
       .then(data => {
           document.getElementById("footer").innerHTML = data;
       });
 });
 
-
-
-// document.addEventListener("DOMContentLoaded", function () {
-//     // Import header
-//     fetch("./component/header.html")
-//         .then(response => response.text())
-//         .then(data => {
-//             document.getElementById("header").innerHTML = data;
-//             attachMobileNavEvent(); // Gán lại sự kiện sau khi header load xong
-//         });
-
-//     // Import footer
-//     fetch("./component/footer.html")
-//         .then(response => response.text())
-//         .then(data => {
-//             document.getElementById("footer").innerHTML = data;
-//         });
-// });
 
 // Hàm gán sự kiện cho menu mobile
 function attachMobileNavEvent() {

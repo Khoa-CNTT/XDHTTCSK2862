@@ -58,6 +58,9 @@ public class Services {
     public ServiceResponse updateService(ServiceRequest request, String id){
         com.example.myevent_be.entity.Service service = getServiceById(id);
 
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            service.setImage(request.getImage());
+        }
         mapper.updateService(service,request);
 
         return mapper.toServiceRespones(repository.save(service));

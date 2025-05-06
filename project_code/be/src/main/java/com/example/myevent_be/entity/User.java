@@ -54,4 +54,7 @@ public class User {
 
     @OneToMany(mappedBy = "id")
     Set<Service> services;
+
+    @OneToMany(mappedBy = "id")
+    Set<Location> locations;
 }

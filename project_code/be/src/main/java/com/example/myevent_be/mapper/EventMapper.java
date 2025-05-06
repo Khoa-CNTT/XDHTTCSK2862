@@ -13,9 +13,10 @@ public interface EventMapper {
     @Mapping(source = "eventType_id", target = "event_type.id")
     Event toEvent(EventCreateRequest request);
 
-//    @Mapping(source = "event_type.id", target = "eventType_id") // 👈 Map khi trả về
+    //    @Mapping(source = "event_type.id", target = "eventType_id") // 👈 Map khi trả về
     @Mapping(source = "event_type", target = "eventTypeName", qualifiedByName = "eventTypeToString")
     EventResponse toEventResponse(Event event);
 
+    @Mapping(target = "event_type", ignore = true) // Bỏ qua mapping event_type vì đã xử lý trong service
     void updateEvent(@MappingTarget Event event, EventUpdateRequest request);
 }

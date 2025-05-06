@@ -41,4 +41,8 @@ public class Location {
 
     @OneToMany(mappedBy = "location")
     Set<LocationRental> locationRentals;
+
+    @ManyToOne
+    @JoinColumn(name="userid",referencedColumnName = "id",nullable = false,columnDefinition = "VARCHAR(255) DEFAULT 'DEFAULT_TYPE_ID'")
+    User user;
 }

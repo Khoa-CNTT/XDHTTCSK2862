@@ -1,0 +1,90 @@
+package com.example.myevent_be.service;
+
+import com.example.myevent_be.dto.request.TimelineRequest;
+import com.example.myevent_be.dto.response.PageResponse;
+import com.example.myevent_be.dto.response.TimelineResponse;
+import com.example.myevent_be.entity.TimeLine;
+import com.example.myevent_be.exception.ResourceNotFoundException;
+import com.example.myevent_be.mapper.PageMapper;
+import com.example.myevent_be.mapper.TimelineMapper;
+import com.example.myevent_be.repository.TimelineRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class TimelineService {
+
+    TimelineRepository timelineRepository;
+    TimelineMapper timelineMapper;
+    PageMapper pageMapper;
+    // RentalRepository rentalRepository;
+
+
+    public TimelineResponse createTimeline(TimelineRequest request) {
+
+        TimeLine timeline = timelineMapper.toTimeline(request);
+
+        log.info("Received TimelineRequest: {}", request);
+
+        timelineRepository.save(timeline);
+        return timelineMapper.toTimelineResponse(timeline);
+    }
+
+    public PageResponse getTimelines(int pageNo, int pageSize) {
+        int p=0;
+        if(pageNo>0){
+            p=pageNo-1;
+        }
+        Page<TimeLine> page = timelineRepository.findAll(PageRequest.of(p, pageSize));
+        return pageMapper.toPageResponse(page,timelineMapper::toTimelineResponse);
+    }
+
+    public TimeLine getTimelineById(String id) {
+        return timelineRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Timeline not found with rentalid: " + id));
+    }
+
+
+    @Transactional
+    public TimelineResponse updatrTimeLine(String id, TimelineRequest request) {
+        TimeLine timeLine = timelineRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("timeline not found with id: " + id));
+
+        TimeLine updated = timelineRepository.save(timeLine);
+        timelineMapper.updateTimeLine(timeLine, request);
+        return timelineMapper.toTimelineResponse(updated);
+    }
+
+    public TimelineResponse getTimeline(@PathVariable String id){
+        TimeLine timeline= getTimelineById(id);
+        return timelineMapper.toTimelineResponse(timeline);
+    }
+
+    public void deleteTimeline(String id) {
+        TimeLine timeline= getTimelineById(id);
+       timelineRepository.delete(timeline);
+    }
+
+    public List<TimelineResponse> getTimelinesByRentalId(String rentalId) {
+        log.info("Getting timelines by rental id: {}", rentalId);
+
+        // Find all timelines for the given rental ID
+        List<TimeLine> timelines = timelineRepository.findByRentalId(rentalId);
+
+        // Map to response DTOs
+        return timelines.stream()
+                .map(timelineMapper::toTimelineResponse)
+                .toList();
+    }
+}

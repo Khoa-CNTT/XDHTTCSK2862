@@ -1,3 +1,4 @@
+
 package com.example.myevent_be.entity;
 
 import jakarta.persistence.*;
@@ -11,7 +12,7 @@ import java.util.Date;
 @Data
 @Builder
 @NoArgsConstructor
-@Table(name = "user_verification_request")
+@Table(name = "user_verification_requests")
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity

@@ -18,11 +18,14 @@ public interface ContractMapper {
     @Mapping(source = "paymentIntentId", target = "paymentIntentId", qualifiedByName = "mapUUID")
     Contract toContract(ContractRequest request);
     
-    @Mapping(source = "status", target = "status", qualifiedByName = "mapStatusToString")
+    @Mapping(source = "create_at", target = "createdAt")
+    @Mapping(source = "update_at", target = "updatedAt")
+    @Mapping(source = "customer.name", target = "customerName")
+    @Mapping(source = "customer.phone_number", target = "customerPhone")
+    @Mapping(source = "customer.address", target = "eventAddress")
+    @Mapping(source = "rental.id", target = "rentalId")
     ContractResponse toContractResponse(Contract contract);
-    
-    @Mapping(source = "status", target = "status", qualifiedByName = "mapStatus")
-    @Mapping(source = "paymentIntentId", target = "paymentIntentId", qualifiedByName = "mapUUID")
+
     void updateContract(@MappingTarget Contract contract, ContractUpdateRequest contractUpdateRequest);
 
     @Named("mapStatus")

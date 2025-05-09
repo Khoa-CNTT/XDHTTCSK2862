@@ -5,127 +5,108 @@ import com.example.myevent_be.enums.VerificationType;
 import com.example.myevent_be.repository.UserVerificationRequestRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserVerificationService {
-    private final UserVerificationRequestRepository verificationRequestRepository;
-    private final JavaMailSender mailSender;
-    private static final Logger logger = LoggerFactory.getLogger(UserVerificationService.class);
+    UserVerificationRequestRepository userVerificationRequestRepository;
+    JavaMailSender javaMailSender;
+    int CODE_LENGTH = 6;
 
-    @Transactional
-    public void sendVerificationEmail(String email) {
-        try {
-            // Xóa token cũ nếu có
-            verificationRequestRepository.deleteByEmail(email);
-
-            // Tạo token mới
-            UserVerificationRequest verificationRequest = UserVerificationRequest.builder()
-                    .email(email)
-                    .code(generateVerificationCode())
-                    .type(VerificationType.EMAIL_VERIFICATION.toString())
-                    .expirationTime(generateExpirationTime())
-                    .build();
-
-            // Lưu token mới
-            verificationRequestRepository.saveAndFlush(verificationRequest);
-
-            // Gửi email
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setTo(email);
-            helper.setSubject("Xác nhận tài khoản của bạn");
-            helper.setText("<p>Chào bạn,</p>" +
-                    "<p>Mã xác nhận của bạn là: <b>" + verificationRequest.getCode() + "</b></p>" +
-                    "<p>Mã này có hiệu lực trong 15 phút.</p>" +
-                    "<p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>", true);
-
-            mailSender.send(message);
-            logger.info("Verification email sent successfully to: {}", email);
-        } catch (MessagingException e) {
-            logger.error("Error sending verification email to: {}", email, e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Không thể gửi email xác nhận. Vui lòng thử lại sau."
-            );
-        } catch (Exception e) {
-            logger.error("Unexpected error while sending verification email to: {}", email, e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Đã xảy ra lỗi không mong muốn"
-            );
-        }
-    }
-
-    private String generateVerificationCode() {
-        Random random = new Random();
-        int code = 100000 + random.nextInt(900000); // mã 6 số
-        return String.valueOf(code);
-    }
-
-    private Date generateExpirationTime() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MINUTE, 15); // mã có hiệu lực trong 15 phút
-        return calendar.getTime();
-    }
-
-//    public boolean verifyCode(String code) {
-//        logger.info("Verifying code: {}", code);
+//    private String generateVerificationCode() {
+//        Random random = new Random();
+//        int code = 100000 + random.nextInt(900000); // ma 6 so
+//        return String.valueOf(code);
+//    }
 //
-//        // Tìm verification request với code tương ứng
-//        Optional<UserVerificationRequest> requestOpt = verificationRequestRepository.findAll().stream()
-//            .filter(req -> req.getCode() != null && req.getCode().equals(code))
-//            .findFirst();
+//    private Date generateExpirationTime() {
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.add(Calendar.MINUTE, 10); // ma co hieu luc trong 10p
+//        return calendar.getTime();
+//    }
+//
+//    @Transactional
+//    public void sendVerificationCode(String email, VerificationType type, String data   ) {
+//        String code = generateVerificationCode();
+//        Date expirationTime = generateExpirationTime();
+//
+//        UserVerificationRequest request = UserVerificationRequest.builder()
+//                .id(UUID.randomUUID().toString())
+//                .email(email)
+//                .data(data)
+//                .code(code)
+//                .expiration_time(expirationTime)
+//                .type(type)
+//                .build();
+//
+//        userVerificationRequestRepository.save(request);
+//    }
+//
+//    public boolean verifyCode(String email, String code) { // kiem tra ma xac nhan
+//        Optional<UserVerificationRequest> requestOpt =
+//                userVerificationRequestRepository.findByEmailAndCode(email, code);
 //
 //        if (requestOpt.isEmpty()) {
-//            logger.warn("No verification request found for code: {}", code);
-//            return false;
+//            throw new ResponseStatusException
+//                    (HttpStatus.BAD_REQUEST, "Mã không hợp lệ hoặc đã hết hạn.");
 //        }
 //
 //        UserVerificationRequest request = requestOpt.get();
 //
-//        // Kiểm tra code có hết hạn chưa
-//        if (request.getExpirationTime().before(new Date())) {
-//            logger.warn("Verification code expired for code: {}", code);
-//            verificationRequestRepository.delete(request);
-//            return false;
+//        if (request.getExpiration_time().before(new Date())) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã đã hết hạn.");
 //        }
 //
-//        // Xóa code sau khi xác thực thành công
-//        verificationRequestRepository.delete(request);
-//        logger.info("Code verification successful for code: {}", code);
 //        return true;
 //    }
 
-    public boolean verifyCode(String code) {
-        Optional<UserVerificationRequest> requestOpt =
-                verificationRequestRepository.findByCode(code);
+    public void sendVerificationEmail(String email, String data, VerificationType type) {
+        String code = UUID.randomUUID().toString().substring(0, 6); // Tạo mã xác nhận 6 ký tự
+        Date expirationTime = new Date(System.currentTimeMillis() + 15 * 60 * 1000); // Hết hạn sau 15 phút
 
-        if (requestOpt.isEmpty()) {
-            logger.warn("No verification request found for code: {} ",code);
-            return false;
+        // Lưu vào database
+        UserVerificationRequest request = UserVerificationRequest.builder()
+                .id(UUID.randomUUID().toString())
+                .email(email)
+                .code(code)
+                .data(data)
+                .expirationTime(expirationTime)
+                .type(String.valueOf(type))
+                .build();
+        userVerificationRequestRepository.save(request);
+
+        // Gửi email
+        sendEmail(email, code);
+    }
+
+    private void sendEmail(String email, String code) {
+        String subject = "Xác nhận tài khoản của bạn";
+        String verificationLink = "http://localhost:8080/api/auth/verify?email=" + email + "&code=" + code;
+
+        String body = "<p>Chào bạn,</p>" +
+                "<p>Vui lòng nhấn vào nút dưới đây để xác nhận tài khoản của bạn:</p>" +
+                "<a href=\"" + verificationLink + "\" style=\"display:inline-block;padding:10px 20px;background:#28a745;color:#fff;text-decoration:none;border-radius:5px;\">Xác nhận tài khoản</a>" +
+                "<p>Mã xác nhận của bạn: <b>" + code + "</b></p>" +
+                "<p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>";
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Lỗi gửi email: " + e.getMessage());
         }
-
-        UserVerificationRequest request = requestOpt.get();
-
-        // Kiểm tra code có hết hạn chưa
-        if (request.getExpirationTime().before(new Date())) {
-            verificationRequestRepository.delete(request);
-            return false;
-        }
-
-        // Xóa code sau khi xác thực thành công
-        verificationRequestRepository.delete(request);
-        return true;
     }
 }

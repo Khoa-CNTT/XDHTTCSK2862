@@ -12,26 +12,18 @@ import com.example.myevent_be.mapper.UserMapper;
 import com.example.myevent_be.repository.RoleRepository;
 import com.example.myevent_be.repository.UserRepository;
 import com.example.myevent_be.repository.PasswordResetTokenRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 import java.util.Arrays;
 
 @Service
@@ -109,7 +101,7 @@ public class UserService {
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('ADMIN', 'USER', 'SUPPLIER', 'MANAGER')")
-    public UserResponse updateUser(String id, MultipartFile avatar, String data)
+    public UserResponse updateUser(String id, UserUpdateRequest request)
             throws IOException {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -117,28 +109,9 @@ public class UserService {
                         "Không tìm thấy người dùng."
                 ));
 
-        // Parse JSON data từ FormData
-        ObjectMapper objectMapper = new ObjectMapper();
-        UserUpdateRequest request = null;
-        if (data != null && !data.isEmpty()) {
-            request = objectMapper.readValue(data, UserUpdateRequest.class);
-            // Cập nhật các trường từ request
-            userMapper.updateUser(user, request);
-            // Cập nhật password nếu có
-            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-                user.setPassword(passwordEncoder.encode(request.getPassword()));
-            }
-        }
-
-        // Xử lý file ảnh nếu có
-        if (avatar != null && !avatar.isEmpty()) {
-            String fileName = UUID.randomUUID() + "_" + avatar.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir, fileName);
-            Files.createDirectories(filePath.getParent());
-            avatar.transferTo(filePath);
-//            // Lưu đường dẫn đầy đủ
-//            String avatarUrl = "/api/v1/FileUpload/files/" + fileName;
-//            user.setAvatar(avatarUrl);
+        // Cập nhật trường img nếu có giá trị mới
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            user.setAvatar(request.getAvatar());
         }
 
         // Lưu user và trả về response

@@ -1,4 +1,4 @@
-package com.example.myevent_be.dto.response;
+package com.example.myevent_be.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +8,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectResponse {
-    boolean valid;
+public class FogetPasswordRequest {
+    String email;
+//    String newPassword;
+//    String confirmPassword;
 }
-

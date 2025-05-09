@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
 import java.util.UUID;
-
 
 @Data
 @NoArgsConstructor
@@ -21,13 +21,13 @@ public class ContractResponse {
     @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     String name;
 
-    @NotNull(message = "Payment Intent ID cannot be null")
-    UUID paymentIntentId;
-
-    String rentalId;
-    String customerId;
-
-    @NotNull(message = "Status cannot be null")
-    @Size(min = 1, max = 50, message = "Status must be between 1 and 50 characters")
+    String customerName;
+    String customerPhone;
+    String eventAddress;
+    Date eventTime;
     String status;
+    UUID paymentIntentId;
+    String rentalId;
+    Date createdAt;
+    Date updatedAt;
 }

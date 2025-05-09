@@ -5,17 +5,18 @@ document.addEventListener("DOMContentLoaded", function () {
       return response.text();
     })
     .then(data => {
-      document.getElementById("header").innerHTML = data;
-      console.log("Header loaded thành công!");
-
-      // Tải lại script chính của trang
-      loadMainScript();
-
-      // Chờ header load xong, rồi cập nhật user info
-      setTimeout(() => {
+      const headerElement = document.getElementById("header");
+      if (headerElement) {
+        headerElement.innerHTML = data;
+        console.log("Header loaded thành công!");
+        // Cập nhật user info ngay sau khi header được render
         updateUserInfo();
+        // Tải lại script chính của trang
+        loadMainScript();
         initSidebarToggle(); // Khởi động lại toggle sidebar
-      }, 200);
+      } else {
+        console.error("Không tìm thấy phần tử #header trong DOM.");
+      }
     })
     .catch(error => console.error("Lỗi tải header:", error));
 });
@@ -39,22 +40,74 @@ function updateUserInfo() {
   const userAvatar = document.getElementById("user-avatar");
   const userName = document.getElementById("user-name");
   const fullName = document.getElementById("full-name");
+  const roleElement = document.getElementById("role");
   const logoutBtn = document.getElementById("logout-btn");
 
   if (user) {
     loginBtn?.classList.add("d-none");
     userInfo?.classList.remove("d-none");
 
-    // Cập nhật avatar (kiểm tra nếu có avatar)
+    // Cập nhật avatar (kiểm tra nếu có avatar) cũ nè
+                // if (userAvatar) {
+                //   userAvatar.setAttribute("src", user.avatar || "assets/img/default-avatar.png");
+                // }
+    //_____________________________
+    // Cập nhật avatar (kiểm tra nếu có avatar) mới
     if (userAvatar) {
-      userAvatar.setAttribute("src", user.avatar || "assets/img/default-avatar.png");
+      const defaultAvatarPath = "assets/img/default-avatar.png";
+      if (user.avatar) {
+        try {
+          const baseApiUrl = 'http://localhost:8080/event-management/api/v1/FileUpload/files/';
+          const fileName = user.avatar.split('/').pop();
+          const imageUrl = `${baseApiUrl}${fileName}`;
+
+          userAvatar.src = imageUrl;
+          userAvatar.onerror = function () {
+            console.error('Lỗi tải ảnh:', imageUrl);
+            this.src = defaultAvatarPath;
+          };
+        } catch (error) {
+          console.error('Lỗi xử lý ảnh:', error);
+          userAvatar.src = defaultAvatarPath;
+        }
+      } else {
+        userAvatar.src = defaultAvatarPath;
+      }
     }
+     //_____________________________
 
     // Cập nhật tên hiển thị
     const displayName = `${user.last_name || ""} ${user.first_name || ""}`.trim();
     if (userName) userName.textContent = displayName;
     if (fullName) fullName.textContent = displayName;
+    if (roleElement) roleElement.textContent = user.roleName || "Vô phận sự";
+    else console.error("Không tìm thấy phần tử #role trong DOM");
 
+    // Lấy role_name từ API /role
+    console.log("Gọi API /role với role_id:", user.roleName);
+    fetch('http://localhost:8080/event-management/roles', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem("token") || ""}`, // Thêm token nếu có
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        console.log("Trạng thái phản hồi API /role:", res.status, res.statusText);
+        if (!res.ok) throw new Error(`Lỗi khi lấy dữ liệu vai trò: ${res.status}`);
+        return res.json();
+      })
+      .then(roles => {
+        console.log("Danh sách roles từ API:", roles);
+        console.log("Tìm role với id:", user.roleName);
+        const role = roles.find(role => role.id === user.roleName || role.id.toString() === user.roleName);
+        const roleName = user.roleName;
+        console.log("Tên vai trò tìm được:", roleName);
+        if (roleElement) roleElement.textContent = roleName;
+      })
+      .catch(error => {
+        console.error("Lỗi khi gọi API /role:", error.message);
+        if (roleElement) roleElement.textContent = "Vô phận sự";
+      });
     console.log("Tên hiển thị:", displayName);
   } else {
     loginBtn?.classList.remove("d-none");
@@ -68,10 +121,6 @@ function updateUserInfo() {
     window.location.reload(); // Load lại trang để cập nhật UI
   });
 }
-
-// Gọi khi trang tải xong
-document.addEventListener("DOMContentLoaded", updateUserInfo);
-
 function initSidebarToggle() {
   let toggleBtn = document.querySelector(".toggle-sidebar-btn");
   if (toggleBtn) {

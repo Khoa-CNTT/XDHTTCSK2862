@@ -48,4 +48,13 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     Set<Token> tokens;
+
+    @OneToMany(mappedBy = "id")
+    Set<Device> devices;
+
+    @OneToMany(mappedBy = "id")
+    Set<Service> services;
+
+    @OneToMany(mappedBy = "id")
+    Set<Location> locations;
 }

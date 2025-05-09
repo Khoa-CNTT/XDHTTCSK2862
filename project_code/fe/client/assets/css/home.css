@@ -36,7 +36,8 @@
 
 .hero .carousel-item:before {
   content: "";
-  background: color-mix(in srgb, var(--background-color), transparent 60%);
+  background: rgba(0, 0, 0, 0.5); 
+  backdrop-filter: blur(2px);
   position: absolute;
   inset: 0;
   z-index: 2;

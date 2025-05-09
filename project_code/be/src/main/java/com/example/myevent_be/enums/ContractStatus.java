@@ -7,3 +7,4 @@ public enum ContractStatus {
     WAITING_PAID,
     COMPLETED
 }
+

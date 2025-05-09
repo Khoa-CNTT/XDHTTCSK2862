@@ -10,8 +10,12 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
+import java.util.UUID;
+
 @Mapper(componentModel = "spring")
 public interface ContractMapper {
+    @Mapping(source = "status", target = "status", qualifiedByName = "mapStatus")
+    @Mapping(source = "paymentIntentId", target = "paymentIntentId", qualifiedByName = "mapUUID")
     Contract toContract(ContractRequest request);
     
     @Mapping(source = "create_at", target = "createdAt")
@@ -21,7 +25,7 @@ public interface ContractMapper {
     @Mapping(source = "customer.address", target = "eventAddress")
     @Mapping(source = "rental.id", target = "rentalId")
     ContractResponse toContractResponse(Contract contract);
-    
+
     void updateContract(@MappingTarget Contract contract, ContractUpdateRequest contractUpdateRequest);
 
     @Named("mapStatus")
@@ -30,5 +34,21 @@ public interface ContractMapper {
             return null;
         }
         return ContractStatus.valueOf(status);
+    }
+
+    @Named("mapStatusToString")
+    default String mapStatusToString(ContractStatus status) {
+        if (status == null) {
+            return null;
+        }
+        return status.name();
+    }
+
+    @Named("mapUUID")
+    default UUID mapUUID(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return UUID.fromString(uuid.toString());
     }
 }

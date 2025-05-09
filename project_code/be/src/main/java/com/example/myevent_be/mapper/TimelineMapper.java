@@ -1,7 +1,6 @@
 package com.example.myevent_be.mapper;
 
 import com.example.myevent_be.dto.request.TimelineRequest;
-import com.example.myevent_be.dto.request.TimelineUpdateRequest;
 import com.example.myevent_be.dto.response.TimelineResponse;
 import com.example.myevent_be.entity.Rental;
 import com.example.myevent_be.entity.TimeLine;

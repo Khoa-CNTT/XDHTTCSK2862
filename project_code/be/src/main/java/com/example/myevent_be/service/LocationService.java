@@ -8,7 +8,6 @@ import com.example.myevent_be.exception.ResourceNotFoundException;
 import com.example.myevent_be.mapper.LocationMapper;
 import com.example.myevent_be.mapper.PageMapper;
 import com.example.myevent_be.repository.LocationRepository;
-import com.example.myevent_be.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class LocationService {
     LocationMapper mapper;
     LocationRepository repository;
-    UserRepository userRepository;
     PageMapper pageMapper;
 
     @PreAuthorize("hasAuthority('SUPPLIER')")

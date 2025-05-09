@@ -2,7 +2,8 @@ package com.example.myevent_be.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UUID;
+
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor

@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+import java.util.UUID;
 
 @Service
 public class ContractService {
@@ -21,8 +21,8 @@ public class ContractService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public ContractResponse createContract(ContractRequest contractRequest) {
-        String paymentIntentIdStr = contractRequest.getPaymentIntentId().toString();
-        if (contractRepository.existsByPaymentIntentId(paymentIntentIdStr)) {
+        UUID paymentIntentId = contractRequest.getPaymentIntentId();
+        if (contractRepository.existsByPaymentIntentId(paymentIntentId)) {
             throw new AppException(ErrorCode.CONTRACT_ALREADY_EXISTED);
         }
         Contract contract = contractMapper.toContract(contractRequest);

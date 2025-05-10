@@ -3,6 +3,14 @@ function getValue(id) {
     return document.getElementById(id).value.trim();
 }
 
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = "home.html"; 
+    }
+}
+
 function showAlert(message, type) {
     const alertBox = document.getElementById("alertBox");
     alertBox.textContent = message;

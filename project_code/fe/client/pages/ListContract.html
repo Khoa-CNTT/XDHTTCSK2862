@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Hợp Đồng</title>
+   <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/css/main.css" rel="stylesheet">
+    <link rel="stylesheet" href="/XDHTTCSK2862/project_code/fe/client/assets/css/contract.css">
+    
+</head>
+
+<body>
+    <div id="header"></div>
+    <div class="content container">
+        <h2>DANH SÁCH HỢP ĐỒNG</h2>
+        <div class="toast" id="successToast">Thanh toán thành công!</div>
+        <div class="filter-bar">
+            <div>
+                <input type="text" id="tenHopDong" placeholder="Nhập tên hợp đồng" class="form-control d-inline-block"
+                    style="width: 200px;">
+                <select id="trangThai">
+                    <option value="">Tất cả</option>
+                    <option value="draft">Bản Nháp</option>
+                    <option value="deposit_paid">Đã Đặt Cọc</option>
+                    <option value="inprogress">Đang Thực Hiện</option>
+                    <option value="waiting_paid">Chờ Thanh Toán</option>
+                    <option value="completed">Hoàn Thành</option>
+                </select>
+            </div>
+            <div>
+                <button class="search-btn" onclick="searchContracts()">Tìm kiếm</button>
+                <button class="reset-btn" onclick="resetFilters()">Xóa bộ lọc</button>
+            </div>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên hợp đồng</th>
+                    <th>Giá trị hợp đồng</th>
+                    <th>Hiệu lực hợp đồng</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="danhSachHopDong"></tbody>
+        </table>
+        <nav aria-label="Page navigation">
+            <ul class="pagination" id="phanTrang"></ul>
+        </nav>
+    </div>
+    <div id="footer"></div>
+    <!-- Scroll Top -->
+    <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+    <!-- Preloader -->
+    <div id="preloader"></div>
+
+   
+    <!-- Vendor JS Files -->
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/aos/aos.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+    <!-- Main JS File -->
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/main.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/header.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/ListContract.js"></script>
+</body>
+
+</html>

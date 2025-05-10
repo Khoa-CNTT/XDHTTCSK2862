@@ -27,6 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ContractService {
+
     private final ContractRepository contractRepository;
     private final CustomerRepository customerRepository;
     private final LocationRepository locationRepository;

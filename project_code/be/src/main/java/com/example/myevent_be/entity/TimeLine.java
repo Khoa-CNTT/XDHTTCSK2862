@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
@@ -25,8 +28,15 @@ public class TimeLine {
     @JoinColumn(name = "rental_id", nullable = false)
     Rental rental;
 
+    @Nationalized
     String description;
-    Date time_sart;
+    Date time_start;
+
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     Date create_at;
+
+    @UpdateTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     Date update_at;
 }

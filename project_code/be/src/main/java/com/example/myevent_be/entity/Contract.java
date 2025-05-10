@@ -40,6 +40,11 @@ public class Contract {
     @Nationalized
     Customer customer;
 
+
+    @Enumerated(EnumType.STRING)
+    ContractStatus status;
+
+
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     Date create_at;

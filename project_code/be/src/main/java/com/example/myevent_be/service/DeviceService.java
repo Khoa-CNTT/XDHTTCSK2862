@@ -63,6 +63,9 @@ public class DeviceService {
     public DeviceResponse updateDevice(DeviceRequest request, String id){
         Device device = getDeviceById(id);
 
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            device.setImage(request.getImage());
+        }
         deviceMapper.updateDevice(device,request);
 
         return deviceMapper.toResponse(deviceRepository.save(device));

@@ -1,4 +1,3 @@
-
 function start() {
     getData((users) => {
         renderBigAvatarProfile(users);
@@ -125,42 +124,67 @@ function updateProfile() {
     // Lấy thông tin user từ localStorage
     const user = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
-    
+
     if (!user) {
         console.error("Không tìm thấy thông tin người dùng!");
         return;
     }
+    const currentUserId = user.id; // Lấy ID từ user
     if (!token) {
         console.error("Không tìm thấy token, vui lòng đăng nhập lại!");
         return;
     }
 
+
     // Gán thông tin vào các ô input
     document.getElementById("lastname").value = user.last_name || "";
     document.getElementById("firstname").value = user.first_name || "";
-    document.getElementById("roleinfo").textContent = user.roleName || 'User';
+    console.log("role:", user.roleName);
+    document.getElementById("role").textContent = user.roleName || 'User';
     document.getElementById("phone").value = user.phone_number || "";
     document.getElementById("email").value = user.email || "";
+
+
 
     // Xử lý hiển thị ảnh hiện tại
     const imagePreview = document.getElementById("image");
     const defaultImagePath = "assets/img/profile-img.jpg";
+
     if (user.avatar) {
         try {
             const baseApiUrl = 'http://localhost:8080/event-management/api/v1/FileUpload/files/';
             const fileName = user.avatar.split('/').pop();
             const imageUrl = `${baseApiUrl}${fileName}`;
-            imagePreview.src = imageUrl;
-            imagePreview.onerror = function () {
+
+            // Log để debug
+            console.log('Image URL:', imageUrl);
+
+            // Tạo thẻ img mới
+            const newImg = document.createElement('img');
+            newImg.id = 'image';
+            newImg.style.maxWidth = '300px';
+            newImg.style.height = '250px';
+            newImg.alt = 'Profile Preview';
+
+            // Thay thế ảnh cũ bằng ảnh mới
+            if (imagePreview) {
+                imagePreview.parentNode.replaceChild(newImg, imagePreview);
+            }
+
+            // Set source cho ảnh mới
+            newImg.src = imageUrl;
+
+            // Xử lý lỗi load ảnh
+            newImg.onerror = function () {
                 console.error('Lỗi tải ảnh:', imageUrl);
                 this.src = defaultImagePath;
             };
         } catch (error) {
             console.error('Lỗi xử lý ảnh:', error);
-            imagePreview.src = defaultImagePath;
+            if (imagePreview) imagePreview.src = defaultImagePath;
         }
     } else {
-        imagePreview.src = defaultImagePath;
+        if (imagePreview) imagePreview.src = defaultImagePath;
     }
 
     // Xử lý submit form
@@ -179,25 +203,35 @@ function updateProfile() {
             return;
         }
 
-        // Tạo object dữ liệu cập nhật
-        const updatedUser = {
+        // Tạo FormData
+        const formData = new FormData();
+
+        // Thêm thông tin user
+        const userData = {
+            email: email,
             last_name: lastname,
             first_name: firstname,
-            phone_number: phone,
-            email: email
+            phone_number: phone
         };
 
-        // Tạo FormData để gửi dữ liệu và file
-        const formData = new FormData();
-        if (inputPicture && inputPicture.files[0]) {
-            formData.append('file', inputPicture.files[0]);
-        }
-        formData.append('user', new Blob([JSON.stringify(updatedUser)], {
+        // Thêm user data vào FormData
+        formData.append('user', new Blob([JSON.stringify(userData)], {
             type: 'application/json'
         }));
 
+        // Thêm file ảnh nếu có
+        if (inputPicture && inputPicture.files[0]) {
+            const file = inputPicture.files[0];
+            const maxSizeInBytes = 5 * 1024 * 1024; // Giới hạn 5MB
+            if (file.size > maxSizeInBytes) {
+                alert("File ảnh quá lớn! Vui lòng chọn file nhỏ hơn 5MB.");
+                return;
+            }
+            formData.append('file', inputPicture.files[0]);
+        }
+
         // Gửi yêu cầu PATCH
-        fetch('http://localhost:3000/user', {
+        fetch(`http://localhost:8080/event-management/users/${currentUserId}`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -205,15 +239,40 @@ function updateProfile() {
             body: formData
         })
             .then(response => {
-                if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Lỗi server: ${response.status} - ${text}`);
+                    });
+                }
                 return response.json();
             })
             .then(data => {
                 console.log("Cập nhật hồ sơ thành công:", data);
-                // Cập nhật localStorage với thông tin mới
-                const updatedUserData = { ...user, ...updatedUser };
-                if (data.avatar) updatedUserData.avatar = data.avatar;
-                localStorage.setItem("user", JSON.stringify(updatedUserData));
+                
+                // Cập nhật dữ liệu local
+                const updatedData = {
+                    ...user,
+                    last_name: lastname,
+                    first_name: firstname,
+                    phone_number: phone,
+                    email: email
+                };
+                
+                // Cập nhật avatar nếu có từ server
+                if (data.avatar) {
+                    updatedData.avatar = data.avatar;
+                }
+
+                // Cập nhật localStorage và biến toàn cục
+                localStorage.setItem("user", JSON.stringify(updatedData));
+                console.log("Dữ liệu đã cập nhật:", updatedData);
+
+                // Cập nhật giao diện
+                document.getElementById("nameinfo").textContent = `${updatedData.last_name} ${updatedData.first_name}`;
+                document.getElementById("roleinfo").textContent = updatedData.roleName || 'User';
+                document.getElementById("phoneinfo").textContent = updatedData.phone_number;
+                document.getElementById("emailinfo").textContent = updatedData.email;
+
                 alert("Cập nhật hồ sơ thành công!");
                 window.location.reload();
             })
@@ -223,6 +282,8 @@ function updateProfile() {
             });
     });
 }
+
+
 
 // Hàm xử lý upload ảnh
 function handleImageUpload() {

@@ -1,6 +1,8 @@
 package com.example.myevent_be.controller;
 
 import com.example.myevent_be.dto.request.LocationRentalRequest;
+import com.example.myevent_be.dto.response.ApiResponse;
+import com.example.myevent_be.dto.response.LocationRentalResponse;
 import com.example.myevent_be.entity.LocationRental;
 import com.example.myevent_be.service.LocationRentalService;
 import jakarta.validation.Valid;
@@ -57,5 +59,13 @@ public class LocationRentalController {
         log.info("Request delete location rental with id: {}", id);
         locationRentalService.deleteLocationRental(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/rental/{rentalId}")
+    public ApiResponse<List<LocationRentalResponse>> getLocationRentalsByRentalId(@PathVariable String rentalId) {
+        log.info("Request get location rentals by rental id: {}", rentalId);
+        List<LocationRentalResponse> locationRentalResponses = locationRentalService.getLocationRentalsByRentalId(rentalId);
+        return ApiResponse.<List<LocationRentalResponse>>builder()
+                .result(locationRentalResponses)
+                .build();
     }
 } 

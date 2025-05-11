@@ -1,10 +1,12 @@
 package com.example.myevent_be.service;
 
 import com.example.myevent_be.dto.request.LocationRentalRequest;
+import com.example.myevent_be.dto.response.LocationRentalResponse;
 import com.example.myevent_be.entity.Location;
 import com.example.myevent_be.entity.LocationRental;
 import com.example.myevent_be.entity.Rental;
 import com.example.myevent_be.exception.ResourceNotFoundException;
+import com.example.myevent_be.mapper.LocationRentalMapper;
 import com.example.myevent_be.repository.LocationRentalRepository;
 import com.example.myevent_be.repository.LocationRepository;
 import com.example.myevent_be.repository.RentalRepository;
@@ -25,6 +27,7 @@ public class LocationRentalService {
     LocationRentalRepository locationRentalRepository;
     LocationRepository locationRepository;
     RentalRepository rentalRepository;
+    LocationRentalMapper locationRentalMapper;
 
     @Transactional
     public LocationRental createLocationRental(LocationRentalRequest request) {
@@ -102,5 +105,21 @@ public class LocationRentalService {
             throw new ResourceNotFoundException("Location-rental not found with id: " + id);
         }
         locationRentalRepository.deleteById(id);
+    }
+    public List<LocationRentalResponse> getLocationRentalsByRentalId(String rentalId) {
+        log.info("Getting service rentals by rental id: {}", rentalId);
+
+        // Check if rental exists
+        if (!rentalRepository.existsById(rentalId)) {
+            throw new ResourceNotFoundException("Rental not found with id: " + rentalId);
+        }
+
+        // Find all service rentals for the given rental ID
+        List<LocationRental> locationRentals = locationRentalRepository.findByRentalId(rentalId);
+
+        // Map to response DTOs
+        return locationRentals.stream()
+                .map(locationRentalMapper::toLocationRentalResponse)
+                .toList();
     }
 } 

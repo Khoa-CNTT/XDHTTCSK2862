@@ -14,8 +14,8 @@ function loadHeader() {
                     e.preventDefault();
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
-                    updateHeader(); // Cập nhật giao diện header
-                    window.location.href = "home.html"; // Chuyển hướng về trang chủ
+                    updateHeader();
+                    window.location.href = "home.html";
                 });
             }
         })
@@ -40,11 +40,9 @@ function updateHeader() {
     const currentPath = window.location.pathname;
     console.log("Current path:", currentPath);
 
-
     homeLink.classList.remove("active");
     serviceLink.classList.remove("active");
     aboutLink.classList.remove("active");
-
 
     if (currentPath.includes("home.html")) {
         homeLink.classList.add("active");
@@ -53,7 +51,6 @@ function updateHeader() {
     } else if (currentPath.includes("about.html")) {
         aboutLink.classList.add("active");
     }
-
 
     const token = localStorage.getItem("token");
     let user;
@@ -71,7 +68,7 @@ function updateHeader() {
         userName.textContent = `${user.last_name || "Unknown"} ${user.first_name || "User"}`;
         userAvatar.src = user.avatar || "/fe-event-management/client/assets/img/avatar/avt.jpg";
         console.log("Đường dẫn ảnh:", userAvatar.src);
-        if (user.role_id === "SUPLIER") { 
+        if (user.role_id === "SUPLIER") {
             dropdownMenu.innerHTML = `
                 <li><a class="dropdown-item d-flex align-items-center" href="account.html"><i class="bi bi-person-circle"></i><span>Thông tin cá nhân</span></a></li>
                 <li><a class="dropdown-item d-flex align-items-center" href="device_table.html"><i class="bi bi-file-earmark-text"></i><span>Quản lý thiết bị</span></a></li>
@@ -80,11 +77,10 @@ function updateHeader() {
                 <li><a class="dropdown-item d-flex align-items-center" href="change_password.html"><i class="bi bi-shield-lock"></i><span>Đổi mật khẩu</span></a></li>
                 <li><a class="dropdown-item d-flex align-items-center logout-btn" href="#" id="logout-btn"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
             `;
-        } else { 
+        } else {
             dropdownMenu.innerHTML = `
                 <li><a class="dropdown-item d-flex align-items-center" href="account.html"><i class="bi bi-person-circle"></i><span>Thông tin cá nhân</span></a></li>
                 <li><a class="dropdown-item d-flex align-items-center" href="ListContract.html"><i class="bi bi-file-earmark-text"></i><span>Quản lý hợp đồng</span></a></li>
-                <li><a class="dropdown-item d-flex align-items-center" href="invitation.html"><i class="bi bi-envelope"></i><span>Quản lý thư mời</span></a></li>
                 <li><a class="dropdown-item d-flex align-items-center" href="change_password.html"><i class="bi bi-shield-lock"></i><span>Đổi mật khẩu</span></a></li>
                 <li><a class="dropdown-item d-flex align-items-center logout-btn" href="#" id="logout-btn"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
             `;
@@ -95,8 +91,8 @@ function updateHeader() {
                 e.preventDefault();
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
-                updateHeader(); 
-                window.location.href = "home.html"; 
+                updateHeader();
+                window.location.href = "home.html";
             });
         }
     } else {
@@ -104,9 +100,5 @@ function updateHeader() {
         userMenu.style.display = "none";
     }
 }
-
-// document.addEventListener("DOMContentLoaded", function () {
-//     loadHeader(); 
-// });
 
 window.updateHeader = updateHeader;

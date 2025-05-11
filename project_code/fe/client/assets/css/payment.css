@@ -1,0 +1,158 @@
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.header .logo h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.header .logo span {
+    color: #718355;
+}
+
+.navmenu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.navmenu ul li {
+    margin-right: 20px;
+}
+
+.navmenu ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.navmenu ul li a:hover {
+    color: #718355;
+}
+
+.content {
+    margin-top: 80px;
+    padding: 20px;
+    flex: 1;
+}
+
+.content h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.payment-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.payment-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.payment-form input,
+.payment-form select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.payment-form .btn {
+    background-color: #718355;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.payment-form .btn:hover {
+    background-color: #5a6268;
+}
+
+.payment-form .btn-back {
+    background-color: #6c757d;
+}
+
+.payment-form .btn-back:hover {
+    background-color: #5a6268;
+}
+
+.status-message {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.status-message.deposit {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-message.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.result-message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    display: none;
+}
+
+.result-message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.result-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.transaction-info {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+}
+
+#footer {
+    background-color: #e6f0e6;
+    padding: 20px 0;
+    text-align: center;
+    width: 100%;
+}
+
+#footer .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}

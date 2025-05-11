@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Chat Hỗ Trợ - MyEvent</title>
+    <meta name="description" content="Hỗ trợ tổ chức sự kiện với MyEvent">
+    <meta name="keywords" content="tổ chức sự kiện, MyEvent, chat hỗ trợ">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap-icons/bootstrap-icons.css"
+        rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/css/main.css" rel="stylesheet">
+    <link href="/XDHTTCSK2862/project_code/fe/client/assets/css/chatAI.css" rel="stylesheet">
+    
+</head>
+
+<body>
+    <div id="header"></div>
+    <main class="chat-container" data-aos="fade-up">
+        <h1 class="chat-title">Hỗ Trợ Tổ Chức Sự Kiện</h1>
+        <p class="chat-subtitle">MyEvent - Chuyên nghiệp & Sáng tạo</p>
+        <div class="chat-box" id="chat-box">
+            <div class="chat-message bot">
+                <span class="sender">MyEvent AI</span>
+                Xin chào! Tôi là trợ lý hỗ trợ tổ chức sự kiện của bạn. Bạn đang cần hỗ trợ về loại sự kiện nào?
+                Đây là các loại sự kiện mà công ty chúng tôi hỗ trợ. Bạn hãy cho tôi biết nhé!
+                <div class="timestamp"></div>
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">MyEvent AI đang trả lời...</div>
+        <div class="chat-input">
+            <textarea rows="2" id="chat-input" placeholder="Nội dung bạn nhập sẽ hiển thị ở đây..."></textarea>
+            <button id="send-btn">Gửi</button>
+            <button class="mic-btn" id="mic-btn"><i class="bi bi-mic-fill"></i></button>
+        </div>
+    </main>
+
+    <!-- Vendor JS Files -->
+    <!-- Vendor JS Files -->
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/aos/aos.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+    <!-- Main JS File -->
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/main.js"></script>
+    <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/header.js"></script>
+     <script src="/XDHTTCSK2862/project_code/fe/client/assets/js/chatAI.js"></script>
+</body>
+
+</html>

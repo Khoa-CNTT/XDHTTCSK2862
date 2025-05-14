@@ -1,10 +1,13 @@
 package com.example.myevent_be.entity;
 
+import com.example.myevent_be.validater.ValidPhoneNumber;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
@@ -23,8 +26,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
+    @Nationalized
     String first_name;
+    @Nationalized
     String last_name;
+
+    @Email(message = "Email không hợp lệ")
     String email;
 
     @Size(min = 8)
@@ -35,10 +42,11 @@ public class User {
     Role role;
 
     String avatar;
-    String phone_number;
+    @ValidPhoneNumber
+    String phoneNumber;
 
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP) // Xác định kiểu thời gian
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(updatable = false)
     Date created_at;
 
@@ -57,4 +65,7 @@ public class User {
 
     @OneToMany(mappedBy = "id")
     Set<Location> locations;
+
+    @Column(nullable = true)
+    private Boolean isVerified = false; // Mặc định là chưa xác minh
 }

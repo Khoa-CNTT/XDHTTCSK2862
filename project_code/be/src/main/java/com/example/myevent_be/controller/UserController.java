@@ -2,10 +2,16 @@ package com.example.myevent_be.controller;
 
 import com.example.myevent_be.dto.request.*;
 import com.example.myevent_be.dto.response.ApiResponse;
+import com.example.myevent_be.dto.response.EventResponse;
 import com.example.myevent_be.dto.response.UserResponse;
+import com.example.myevent_be.exception.AppException;
+import com.example.myevent_be.exception.ErrorCode;
+import com.example.myevent_be.service.ImageStorageService;
 import com.example.myevent_be.service.UserService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +28,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    private final UserService userService;
-//    private final IStorageService storageService;
+    UserService userService;
+    //    private final IStorageService storageService;
+    ImageStorageService storageService;
 
     @PostMapping("/signing-up")
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
@@ -40,8 +48,8 @@ public class UserController {
     }
 
     @GetMapping("/manager")
-    @PreAuthorize("hasAuthority('MANAGER')")
-    public List<UserResponse> getUserByRole(){
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'USER')")
+    public List<UserResponse> getUserByRole() {
         return userService.getUserByRole();
     }
 
@@ -50,71 +58,32 @@ public class UserController {
         return userService.getUser(userId);
     }
 
-    @PatchMapping(value = "/{userId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_JSON_VALUE})
-    @ResponseBody
-//    ApiResponse<UserResponse> updateUser(
-//            @PathVariable String userId,
-//            @RequestPart(value = "avatar", required = false) MultipartFile file,
-//            @RequestPart(value = "data", required = false) String data) {
-//
-//        UserUpdateRequest request = new UserUpdateRequest();
-//        if (data != null) {
-//            try {
-//                ObjectMapper objectMapper = new ObjectMapper();
-//                request = objectMapper.readValue(data, UserUpdateRequest.class);
-//                log.info("Parsed update data: {}", data);
-//            } catch (Exception e) {
-//                log.error("Error parsing update data", e);
-//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu không hợp lệ: " + e.getMessage());
-//            }
-//        }
-//
-//        try {
-//            if (file != null && !file.isEmpty()) {
-//                // Kiểm tra loại file
-//                String contentType = file.getContentType();
-//                if (contentType == null || !contentType.startsWith("image/")) {
-//                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ hỗ trợ file ảnh (jpg, png, ...)");
-//                }
-//
-//                // Kiểm tra kích thước
-//                if (file.getSize() > 5 * 1024 * 1024) {
-//                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File ảnh quá lớn, tối đa 5MB");
-//                }
-//
-//                // Store the uploaded file
-//                String fileName = storageService.storeFile(file);
-//                log.info("File stored successfully with name: {}", fileName);
-//
-//                // Set the image path in the request - chỉ lưu tên file
-//                request.setAvatar(fileName);
-//            }
-//
-//            UserResponse response = userService.updateUser(userId, request);
-//            // Đảm bảo response có URL đầy đủ của avatar
-//            if (response != null && response.getAvatar() != null && !response.getAvatar().startsWith("/api/v1/FileUpload/files/")) {
-//                response.setAvatar("/api/v1/FileUpload/files/" + response.getAvatar());
-//            }
-//            log.info("User updated successfully: {}", response);
-//            return ApiResponse.<UserResponse>builder()
-//                    .result(response)
-//                    .build();
-//        } catch (Exception e) {
-//            log.error("Error updating user: ", e);
+    @PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse<UserResponse> updateUser(
+            @PathVariable String userId,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart("user") @Valid UserUpdateRequest request) {
+        log.info("Received update user request: {}", request);
+        try {
+            // Store the uploaded file
+            String fileName = storageService.storeFile(file);
+            log.info("File stored successfully with name: {}", fileName);
+
+            // Set the image path in the request
+            request.setAvatar(fileName);
+
+            UserResponse response = userService.updateUser(userId, request);
+            log.info("Event created successfully: {}", response);
+            return ApiResponse.<UserResponse>builder()
+                    .result(response)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error creating event: ", e);
 //            if (e instanceof AppException) {
 //                throw e;
 //            }
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
-//    }
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable String id,
-            @RequestParam(value = "avatar", required = false) MultipartFile avatar,
-            @RequestParam(value = "data", required = false) String data)
-            throws IOException {
-        UserResponse response = userService.updateUser(id, avatar, data);
-        return ResponseEntity.ok(response);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @DeleteMapping("/{userId}")

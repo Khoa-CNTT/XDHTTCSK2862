@@ -1,5 +1,6 @@
 package com.example.myevent_be.repository;
 
+import com.example.myevent_be.dto.request.ForgetPasswordRequest;
 import com.example.myevent_be.entity.PasswordResetToken;
 import com.example.myevent_be.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +16,7 @@ import java.util.Optional;
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, String> {
     Optional<PasswordResetToken> findByToken(String token);
     Optional<PasswordResetToken> findByUser(User user);
-    
+
     @Modifying
     @Query("DELETE FROM PasswordResetToken t WHERE t.user = :user")
     void deleteByUser(@Param("user") User user);

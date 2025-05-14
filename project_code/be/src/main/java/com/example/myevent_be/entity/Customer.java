@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
@@ -24,8 +25,10 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
+    @Nationalized
     String name;
-    String phone_number;
+    String phoneNumber;
+    @Nationalized
     String address;
 
     @CreationTimestamp

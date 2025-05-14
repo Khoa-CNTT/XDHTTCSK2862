@@ -15,7 +15,7 @@ public interface ServiceMapper {
     @Mapping(source = "userID", target = "user", qualifiedByName = "mapUserById")
     Service toService (ServiceRequest request);
     @Mapping(source = "user.id", target = "userID")
-    ServiceResponse toServiceRespones (Service service);
+    ServiceResponse toServiceResponse (Service service);
     void updateService (@MappingTarget Service service, ServiceRequest request);
     @Named("mapUserById")
     default User mapUserById(String userid) {

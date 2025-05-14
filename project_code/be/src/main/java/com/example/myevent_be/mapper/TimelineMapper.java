@@ -1,7 +1,10 @@
 package com.example.myevent_be.mapper;
 
+import com.example.myevent_be.dto.request.DeviceRentalUpdateRequest;
 import com.example.myevent_be.dto.request.TimelineRequest;
+import com.example.myevent_be.dto.request.TimelineUpdateRequest;
 import com.example.myevent_be.dto.response.TimelineResponse;
+import com.example.myevent_be.entity.DeviceRental;
 import com.example.myevent_be.entity.Rental;
 import com.example.myevent_be.entity.TimeLine;
 import org.mapstruct.Mapper;
@@ -19,7 +22,7 @@ public interface TimelineMapper {
     TimelineResponse toTimelineResponse(TimeLine timeline);
 
     @Mapping(target = "rental", ignore = true) // Bỏ qua mapping event_type vì đã xử lý trong service
-    void updateTimeLine(@MappingTarget TimeLine timeLine, TimelineRequest request);
+    void updateTimeLine(@MappingTarget TimeLine timeLine, TimelineUpdateRequest request);
 
     @Named("mapRentalById")
     default Rental mapRentalById(String rentalid) {

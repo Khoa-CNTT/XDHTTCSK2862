@@ -1,12 +1,18 @@
 package com.example.myevent_be.service;
 
+import com.example.myevent_be.dto.request.DeviceRentalUpdateRequest;
 import com.example.myevent_be.dto.request.TimelineRequest;
+import com.example.myevent_be.dto.request.TimelineUpdateRequest;
+import com.example.myevent_be.dto.response.DeviceRentalResponse;
 import com.example.myevent_be.dto.response.PageResponse;
 import com.example.myevent_be.dto.response.TimelineResponse;
+import com.example.myevent_be.entity.DeviceRental;
+import com.example.myevent_be.entity.Rental;
 import com.example.myevent_be.entity.TimeLine;
 import com.example.myevent_be.exception.ResourceNotFoundException;
 import com.example.myevent_be.mapper.PageMapper;
 import com.example.myevent_be.mapper.TimelineMapper;
+import com.example.myevent_be.repository.RentalRepository;
 import com.example.myevent_be.repository.TimelineRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,14 +35,20 @@ public class TimelineService {
     TimelineRepository timelineRepository;
     TimelineMapper timelineMapper;
     PageMapper pageMapper;
-    // RentalRepository rentalRepository;
+    RentalRepository rentalRepository;
 
 
     public TimelineResponse createTimeline(TimelineRequest request) {
-
+        log.info("Creating new timeline rental");
         TimeLine timeline = timelineMapper.toTimeline(request);
 
         log.info("Received TimelineRequest: {}", request);
+        // Nếu có rentalId, liên kết với Rental
+        if (request.getRental_id() != null) {
+            Rental rental = rentalRepository.findById(request.getRental_id())
+                    .orElseThrow(() -> new ResourceNotFoundException("Rental not found with id: " + request.getRental_id()));
+            timeline.setRental(rental);
+        }
 
         timelineRepository.save(timeline);
         return timelineMapper.toTimelineResponse(timeline);
@@ -57,9 +69,9 @@ public class TimelineService {
 
 
     @Transactional
-    public TimelineResponse updatrTimeLine(String id, TimelineRequest request) {
+    public TimelineResponse updatrTimeLine(String id, TimelineUpdateRequest request) {
         TimeLine timeLine = timelineRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("timeline not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("time line not found with id: " + id));
 
         TimeLine updated = timelineRepository.save(timeLine);
         timelineMapper.updateTimeLine(timeLine, request);
@@ -73,7 +85,7 @@ public class TimelineService {
 
     public void deleteTimeline(String id) {
         TimeLine timeline= getTimelineById(id);
-       timelineRepository.delete(timeline);
+        timelineRepository.delete(timeline);
     }
 
     public List<TimelineResponse> getTimelinesByRentalId(String rentalId) {

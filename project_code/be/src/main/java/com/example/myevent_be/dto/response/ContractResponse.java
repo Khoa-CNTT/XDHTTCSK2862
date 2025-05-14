@@ -14,19 +14,14 @@ import java.util.UUID;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContractResponse {
-    @NotNull(message = "ID cannot be null")
+
     String id;
-
-    @NotNull(message = "Name cannot be null")
-    @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     String name;
-
     String customerName;
     String customerPhone;
-    String eventAddress;
-    Date eventTime;
+    String address;
     String status;
-    UUID paymentIntentId;
+    String paymentIntentId;
     String rentalId;
     Date createdAt;
     Date updatedAt;

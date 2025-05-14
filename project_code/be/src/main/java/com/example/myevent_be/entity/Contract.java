@@ -33,18 +33,15 @@ public class Contract {
     String name;
 
     @Column(name = "payment_intent_id")
-    UUID paymentIntentId;
+    String paymentIntentId;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
-    @Nationalized
     Customer customer;
 
-
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     ContractStatus status;
-
-
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     Date create_at;

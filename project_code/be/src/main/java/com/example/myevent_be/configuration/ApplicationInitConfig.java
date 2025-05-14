@@ -2,7 +2,6 @@ package com.example.myevent_be.configuration;
 
 import com.example.myevent_be.entity.Role;
 import com.example.myevent_be.entity.User;
-
 import com.example.myevent_be.repository.RoleRepository;
 import com.example.myevent_be.repository.UserRepository;
 import lombok.AccessLevel;
@@ -30,7 +29,7 @@ public class ApplicationInitConfig {
 //    @ConditionalOnProperty(
 //            prefix = "spring",
 //            value = "datasource.driverClassName",
-//            havingValue = "driverClassName: \"com.mysql.cj.jdbc.Driver"
+//            havingValue = "driverClassName: \"com.mssql.cj.jdbc.Driver"
 //    )
     @ConditionalOnMissingBean(ApplicationRunner.class)
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository){
@@ -71,11 +70,11 @@ public class ApplicationInitConfig {
                         .first_name("admin")
                         .last_name("admin")
                         .email("admin123@gmail.com")
-                        .avatar("D:\\myevent\\myevent-be\\myevent-be\\src\\img")
+                        .phoneNumber("0123456789")
                         .password(passwordEncoder.encode("admin"))
                         .role(adminRole) // Gán vai trò ADMIN cho người dùng
                         .build();
-    
+
                 // Lưu người dùng vào cơ sở dữ liệu
                 userRepository.save(user);
 

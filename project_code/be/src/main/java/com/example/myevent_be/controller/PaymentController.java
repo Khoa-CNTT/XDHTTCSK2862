@@ -1,245 +1,208 @@
 package com.example.myevent_be.controller;
 
-
-import com.example.myevent_be.configuration.VnpayConfig;
 import com.example.myevent_be.dto.PaymentResDTO;
-import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.example.myevent_be.entity.Contract;
+import com.example.myevent_be.enums.ContractStatus;
+import com.example.myevent_be.exception.AppException;
+import com.example.myevent_be.exception.ErrorCode;
+import com.example.myevent_be.repository.ContractRepository;
+import com.example.myevent_be.repository.RentalRepository;
+import com.example.myevent_be.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
-
+@Slf4j
 @RestController
-@RequestMapping("/api/payment")
-public class PaymentController  {
-    @GetMapping("/create-payment")
-    public ResponseEntity<?> createPayment() throws UnsupportedEncodingException {
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-        String orderType = "other";
-        //       long amount = Integer.parseInt(req.getParameter("amount"))*100;
-        long amount =1000*100;
-        String bankCode ="NCB";
-        String expectedSecret="0CS6330TJNJM2TEC539KYR2JTTBS0PWW";
-        String vnp_TxnRef = VnpayConfig.getRandomNumber(8);
-        //     String vnp_IpAddr = VnpayConfig.getIpAddress(req);
+@RequestMapping("/api/v1/payment")
+@RequiredArgsConstructor
+public class PaymentController {
+    private final VNPayService vnPayService;
+    private final RentalRepository rentalRepository;
+    private final ContractRepository contractRepository;
 
-        String   vnp_IpAddr = "127.0.0.1";
-        String vnp_TmnCode = VnpayConfig.vnp_TmnCode;
+    @PostMapping("/vnpay")
+    public ResponseEntity<PaymentResDTO> createPayment(@RequestParam String contractId,@RequestParam String paymentType, HttpServletRequest request) {
+        try {
+            // Lấy contract từ contractId
+            Contract contract = contractRepository.findById(contractId)
+                    .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
 
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
-        vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_BankCode", bankCode);
+            // Kiểm tra rental
+            if (contract.getRental() == null) {
+                return ResponseEntity.badRequest()
+                        .body(new PaymentResDTO("ERROR", "Không tìm thấy thông tin đặt chỗ", null));
+            }
 
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-
-//        List fieldNames = new ArrayList(vnp_Params.keySet());
-//        Collections.sort(fieldNames);
-//        StringBuilder hashData = new StringBuilder();
-//        StringBuilder query = new StringBuilder();
-//        Iterator itr = fieldNames.iterator();
-//        for (Map.Entry<String, String> entry : vnp_Params.entrySet()) {
-//            String fieldName = (String) itr.next();
-//            String fieldValue = (String) vnp_Params.get(fieldName);
-//            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-//                // Build hash data (KHÔNG encode fieldValue)
-//                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));;
-//                if (hashData.charAt(hashData.length() - 1) == '+') {
-//                    hashData.setCharAt(hashData.length() - 1, ' ');
-//                }
-//                hashData.append('&');
+            // Lấy totalPrice từ Rental
+//            BigDecimal totalPrice = contract.getRental().getTotal_price();
+//            if (totalPrice == null || totalPrice.compareTo(BigDecimal.ZERO) <= 0) {
+//                return ResponseEntity.badRequest()
+//                        .body(new PaymentResDTO("ERROR", "Số tiền thanh toán không hợp lệ", null));
 //            }
-//        }
-//        if (hashData.length() > 0) {
-//            hashData.setLength(hashData.length() - 1);
-//        }
-//        String hashDataStr = hashData.toString();
-
-//
-////        String queryUrl = query.toString();
-//        String vnp_SecureHash = VnpayConfig.hmacSHA512(expectedSecret, hashDataStr);
-//        //queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-//        String paymentUrl = VnpayConfig.vnp_Url + "?" + hashDataStr+ "&vnp_SecureHash=" + vnp_SecureHash;;
-        vnp_Params.remove("vnp_SecureHash"); // Bắt buộc loại bỏ nếu có
-
-        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
-        Collections.sort(fieldNames);
-
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-
-        for (int i = 0; i < fieldNames.size(); i++) {
-            String fieldName = fieldNames.get(i);
-            String fieldValue = vnp_Params.get(fieldName);
-            if (fieldValue != null && !fieldValue.isEmpty()) {
-                String encodedName = URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString());
-                String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString());
-
-                hashData.append(fieldName).append("=").append(encodedValue);
-                query.append(encodedName).append("=").append(encodedValue);
-
-                if (i < fieldNames.size() - 1) {
-                    hashData.append("&");
-                    query.append("&");
-                }
+            BigDecimal totalPrice = contract.getRental().getTotal_price();
+            if (totalPrice == null || totalPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(new PaymentResDTO("ERROR", "Tổng số tiền không hợp lệ", null));
             }
+
+            // Tính số tiền thanh toán dựa trên paymentType
+            BigDecimal amountToPay;
+//            if ("deposit".equalsIgnoreCase(paymentType)) {
+//                // Đặt cọc: 10% totalPrice
+//                amountToPay = totalPrice.multiply(new BigDecimal("0.1"));
+//            } else if ("remaining".equalsIgnoreCase(paymentType)) {
+//                // Thanh toán còn lại: 90% totalPrice
+//                amountToPay = totalPrice.multiply(new BigDecimal("0.9"));
+            if ("deposit".equalsIgnoreCase(paymentType)) {
+                amountToPay = totalPrice.multiply(new BigDecimal("0.1"));
+                log.info("Amount to Pay (Deposit 10%): {}", amountToPay);
+            } else if ("remaining".equalsIgnoreCase(paymentType)) {
+                amountToPay = totalPrice.multiply(new BigDecimal("0.9"));
+                log.info("Amount to Pay (Remaining 90%): {}", amountToPay);
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(new PaymentResDTO("ERROR", "Loại thanh toán không hợp lệ. Chỉ hỗ trợ 'deposit' hoặc 'remaining'.", null));
+            }
+            if (amountToPay.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(new PaymentResDTO("ERROR", "Số tiền thanh toán không hợp lệ", null));
+            }
+
+            // Tạo URL thanh toán VNPAY
+            String paymentUrl = vnPayService.generateVNPayUrl(
+                    amountToPay.doubleValue(),
+                    contractId,
+                    VNPayService.getIpAddress(request)
+            );
+
+            return ResponseEntity.ok(new PaymentResDTO("OK", "Success", paymentUrl));
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo thanh toán: ", e);
+            return ResponseEntity.badRequest().body(new PaymentResDTO("ERROR", e.getMessage(), null));
         }
-
-        String vnp_SecureHash = VnpayConfig.hmacSHA512(VnpayConfig.secretKey, hashData.toString());
-        query.append("&vnp_SecureHash=").append(vnp_SecureHash);
-
-        String paymentUrl = VnpayConfig.vnp_Url + "?" + query.toString();
-        // Thêm log debug
-        System.out.println("hashData: " + hashData.toString());
-        System.out.println("vnp_SecureHash: " + vnp_SecureHash);
-        System.out.println("paymentUrl: " + paymentUrl);
-
-        PaymentResDTO paymentResDTO = new PaymentResDTO();
-        paymentResDTO.setStatus("Ok");
-        paymentResDTO.setMessage("successfully");
-        paymentResDTO.setURL(paymentUrl);
-//        com.google.gson.JsonObject job = new JsonObject();
-//        job.addProperty("code", "00");
-//        job.addProperty("message", "success");
-//        job.addProperty("data", paymentUrl);
-//        Gson gson = new Gson();
-//        resp.getWriter().write(gson.toJson(job));
-        return ResponseEntity.status(HttpStatus.OK).body(paymentResDTO);
     }
 
-    @GetMapping("/pay")
-    public String getPay() throws UnsupportedEncodingException{
+    @GetMapping("/vnpay/return")
+    public ResponseEntity<String> paymentReturn(
+            @RequestParam("vnp_ResponseCode") String responseCode,
+            @RequestParam("vnp_TxnRef") String txnRef,
+            @RequestParam("vnp_Amount") String amount,
+            @RequestParam("vnp_OrderInfo") String orderInfo,
+            @RequestParam("vnp_BankCode") String bankCode,
+            @RequestParam("vnp_PayDate") String payDate,
+            @RequestParam("vnp_TransactionNo") String transactionNo,
+            @RequestParam("vnp_SecureHash") String secureHash
+    ) {
+        try {
+            log.info("Nhận kết quả thanh toán từ VNPAY - Mã giao dịch: {}", txnRef);
+            log.info("Response Code: {}, Bank Code: {}, Amount: {}", responseCode, bankCode, amount);
 
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-        String orderType = "other";
-        long amount = 10000*100;
-        String bankCode = "NCB";
+            if ("00".equals(responseCode)) {
+                log.info("Thanh toán thành công cho rental: {}", txnRef);
 
-        String vnp_TxnRef = VnpayConfig.getRandomNumber(8);
-        String vnp_IpAddr = "127.0.0.1";
+                // Cập nhật trạng thái contract
+                Contract contract = contractRepository.findById(txnRef)
+                        .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
+                log.info("Đã tìm thấy contract: {}", contract.getId());
 
-        String vnp_TmnCode = VnpayConfig.vnp_TmnCode;
+                contract.setStatus(ContractStatus.Completed);
+                contractRepository.save(contract);
+                log.info("Đã cập nhật trạng thái contract thành Completed");
 
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
-        vnp_Params.put("vnp_CurrCode", "VND");
+                return ResponseEntity.ok("Thanh toán thành công!\n" +
+                        "Mã giao dịch: " + transactionNo + "\n" +
+                        "Ngân hàng: " + bankCode + "\n" +
+                        "Thời gian: " + payDate);
+            } else {
+                log.warn("Thanh toán thất bại cho rental: {}, mã lỗi: {}", txnRef, responseCode);
+                return ResponseEntity.badRequest().body("Thanh toán thất bại! Mã lỗi: " + responseCode);
+            }
+        } catch (AppException e) {
+            log.error("Lỗi không tìm thấy contract: ", e);
+            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Lỗi xử lý kết quả thanh toán: ", e);
+            return ResponseEntity.badRequest().body("Lỗi xử lý thanh toán: " + e.getMessage());
+        }
+    }
 
-        vnp_Params.put("vnp_BankCode", bankCode);
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
+    @PostMapping("/vnpay/ipn")
+    public ResponseEntity<String> paymentIPN(
+            @RequestParam("vnp_ResponseCode") String responseCode,
+            @RequestParam("vnp_TxnRef") String txnRef,
+            @RequestParam("vnp_Amount") String amount,
+            @RequestParam("vnp_TransactionNo") String transactionNo,
+            @RequestParam("vnp_SecureHash") String secureHash,
+            HttpServletRequest request
+    ) {
+        try {
+            log.info("Nhận IPN từ VNPAY - Mã giao dịch: {}", txnRef);
 
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-
-        List fieldNames = new ArrayList(vnp_Params.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                //Build hash data
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                //Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
-                    query.append('&');
-                    hashData.append('&');
+            // Tạo map chứa các tham số từ request
+            Map<String, String> fields = new HashMap<>();
+            for (String paramName : request.getParameterMap().keySet()) {
+                String paramValue = request.getParameter(paramName);
+                if (paramValue != null && paramValue.length() > 0) {
+                    fields.put(paramName, paramValue);
                 }
             }
-        }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = VnpayConfig.hmacSHA512(VnpayConfig.secretKey, hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = VnpayConfig.vnp_Url + "?" + queryUrl;
 
-        return paymentUrl;
+            // Xóa các trường không cần thiết
+            fields.remove("vnp_SecureHashType");
+            fields.remove("vnp_SecureHash");
+
+            // Kiểm tra checksum
+            String signValue = vnPayService.hashAllFields(fields);
+            if (!signValue.equals(secureHash)) {
+                log.error("IPN: Invalid checksum");
+                return ResponseEntity.ok("{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}");
+            }
+
+            // Kiểm tra contract tồn tại
+            Contract contract = contractRepository.findById(txnRef)
+                    .orElse(null);
+            if (contract == null) {
+                log.error("IPN: Contract not found - {}", txnRef);
+                return ResponseEntity.ok("{\"RspCode\":\"01\",\"Message\":\"Order not Found\"}");
+            }
+
+            // Kiểm tra số tiền
+            BigDecimal expectedAmount = contract.getRental().getTotal_price().multiply(new BigDecimal("100")); // VNPAY trả về số tiền * 100
+            BigDecimal actualAmount = new BigDecimal(amount);
+            if (!expectedAmount.equals(actualAmount)) {
+                log.error("IPN: Invalid amount - Expected: {}, Actual: {}", expectedAmount, actualAmount);
+                return ResponseEntity.ok("{\"RspCode\":\"04\",\"Message\":\"Invalid Amount\"}");
+            }
+
+            // Kiểm tra trạng thái contract
+            if (contract.getStatus() == ContractStatus.Completed) {
+                log.warn("IPN: Contract already completed - {}", txnRef);
+                return ResponseEntity.ok("{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}");
+            }
+
+            // Cập nhật trạng thái contract
+            if ("00".equals(responseCode)) {
+                contract.setStatus(ContractStatus.Completed);
+                contractRepository.save(contract);
+                log.info("IPN: Payment successful - {}", txnRef);
+                return ResponseEntity.ok("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
+            } else {
+                contract.setStatus(ContractStatus.Cancel);
+                contractRepository.save(contract);
+                log.warn("IPN: Payment failed - {}", txnRef);
+                return ResponseEntity.ok("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
+            }
+
+        } catch (Exception e) {
+            log.error("IPN: Error processing payment - ", e);
+            return ResponseEntity.ok("{\"RspCode\":\"99\",\"Message\":\"Unknown error\"}");
+        }
     }
-//    @PostMapping("/vnpay-ipn")
-//    public ResponseEntity<String> vnpayIpn(HttpServletRequest request) {
-//        Map<String, String> fields = new HashMap<>();
-//        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-//            fields.put(entry.getKey(), entry.getValue()[0]);
-//        }
-//
-//        String vnp_SecureHash = fields.remove("vnp_SecureHash");
-//        fields.remove("vnp_SecureHashType"); // Nếu có
-//
-//        // 1. Sắp xếp key tăng dần
-//        List<String> fieldNames = new ArrayList<>(fields.keySet());
-//        Collections.sort(fieldNames);
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 0; i < fieldNames.size(); i++) {
-//            String key = fieldNames.get(i);
-//            String value = fields.get(key);
-//            sb.append(key).append("=").append(value);
-//            if (i < fieldNames.size() - 1) sb.append("&");
-//        }
-//
-//        // 2. Tạo lại chữ ký
-//        String myChecksum = VnpayConfig.hmacSHA512(VnpayConfig.secretKey, sb.toString());
-//
-//        // 3. Log debug
-//        System.out.println("--- VNPAY IPN ---");
-//        fields.forEach((k, v) -> System.out.println(k + " = " + v));
-//        System.out.println("Chuỗi hash: " + sb.toString());
-//        System.out.println("My Checksum: " + myChecksum);
-//        System.out.println("VNPAY Checksum: " + vnp_SecureHash);
-//
-//        // 4. So sánh
-//        if (myChecksum.equalsIgnoreCase(vnp_SecureHash)) {
-//            System.out.println("IPN hợp lệ!");
-//            // TODO: Xử lý cập nhật đơn hàng ở đây
-//            return ResponseEntity.ok("OK");
-//        } else {
-//            System.out.println("IPN KHÔNG hợp lệ!");
-//            return ResponseEntity.status(400).body("INVALID CHECKSUM");
-//        }
-//    }
 }

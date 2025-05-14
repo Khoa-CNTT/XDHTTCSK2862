@@ -2,11 +2,13 @@ package com.example.myevent_be.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -22,7 +24,7 @@ public class PasswordResetToken {
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
-    
+
     @Column(name = "expiry_date")
-    LocalDateTime expiryDate;
+    Date expiryDate;
 }

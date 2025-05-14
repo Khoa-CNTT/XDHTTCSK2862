@@ -4,6 +4,7 @@ import com.example.myevent_be.exception.AppException;
 import com.example.myevent_be.exception.ErrorCode;
 import com.example.myevent_be.repository.IStorageService;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -22,12 +23,13 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+@Primary
 @Service
 @Slf4j
 public class ImageStorageService implements IStorageService {
     private final Path storageFolder;
 
-    public ImageStorageService(@Value("${app.upload.dir:C:/upload/event-images}") String uploadDir) {
+    public ImageStorageService(@Value("${app.upload.dir:D:/myevent/be-event/upload/event-images}") String uploadDir) {
         this.storageFolder = Paths.get(uploadDir);
         try {
             Files.createDirectories(storageFolder);

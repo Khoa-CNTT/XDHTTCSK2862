@@ -56,6 +56,10 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
+        // Kiểm tra độ dài mật khẩu
+        if (request == null || request.getPassword().length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu phải có ít nhất 8 ký tự.");
+        }
         if (userRepository.existsByEmail(request.getEmail()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
@@ -86,7 +90,7 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
-    @PreAuthorize("hasAuthority('MANAGER')")
+    //    @PreAuthorize("hasAuthority('MANAGER', 'USER')")
     public List<UserResponse> getUserByRole() {
         List<Role> roles = roleRepository.findByNameIn(Arrays.asList("USER", "SUPPLIER"));
         return userRepository.findByRoleIn(roles)
@@ -109,6 +113,29 @@ public class UserService {
                         "Không tìm thấy người dùng."
                 ));
 
+//        // Parse JSON data từ FormData
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        UserUpdateRequest request = null;
+//        if (data != null && !data.isEmpty()) {
+//            request = objectMapper.readValue(data, UserUpdateRequest.class);
+//            // Cập nhật các trường từ request
+//            userMapper.updateUser(user, request);
+//            // Cập nhật password nếu có
+//            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+//                user.setPassword(passwordEncoder.encode(request.getPassword()));
+//            }
+//        }
+//
+//        // Xử lý file ảnh nếu có
+//        if (avatar != null && !avatar.isEmpty()) {
+//            String fileName = UUID.randomUUID() + "_" + avatar.getOriginalFilename();
+//            Path filePath = Paths.get(uploadDir, fileName);
+//            Files.createDirectories(filePath.getParent());
+//            avatar.transferTo(filePath);
+////            // Lưu đường dẫn đầy đủ
+////            String avatarUrl = "/api/v1/FileUpload/files/" + fileName;
+////            user.setAvatar(avatarUrl);
+//        }
         // Cập nhật trường img nếu có giá trị mới
         if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
             user.setAvatar(request.getAvatar());

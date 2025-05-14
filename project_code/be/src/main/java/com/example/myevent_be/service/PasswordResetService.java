@@ -1,6 +1,6 @@
 package com.example.myevent_be.service;
 
-import com.example.myevent_be.dto.request.FogetPasswordRequest;
+import com.example.myevent_be.dto.request.ForgetPasswordRequest;
 import com.example.myevent_be.dto.request.ResetPasswordRequest;
 import com.example.myevent_be.dto.response.UserResponse;
 import com.example.myevent_be.entity.PasswordResetToken;
@@ -10,30 +10,40 @@ import com.example.myevent_be.exception.ErrorCode;
 import com.example.myevent_be.mapper.UserMapper;
 import com.example.myevent_be.repository.PasswordResetTokenRepository;
 import com.example.myevent_be.repository.UserRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PasswordResetService {
-    private final UserRepository userRepository;
-    private final PasswordResetTokenRepository tokenRepository;
-    private final EmailService emailService;
-    private final UserMapper userMapper;
+    UserRepository userRepository;
+    PasswordResetTokenRepository passwordResetTokenRepository;
+    JavaMailSender mailSender;
+    UserMapper userMapper;
+
+    // ✅ Biến lưu mã xác nhận đã gửi (key = email, value = mã)
+    private final Map<String, PasswordResetToken> verificationCodes = new ConcurrentHashMap<>();
 
     @Transactional
-    public UserResponse sendResetPasswordToken(FogetPasswordRequest request) {
+    public UserResponse sendResetPasswordToken(ForgetPasswordRequest request)
+            throws MessagingException {
         log.info("Starting password reset process for email: {}", request.getEmail());
         try {
             // 1. Kiểm tra email có tồn tại không
@@ -42,40 +52,56 @@ public class PasswordResetService {
             log.info("Found user with email: {}", user.getEmail());
 
             // 2. Xóa token cũ nếu có
-            tokenRepository.deleteByUser(user);
+            passwordResetTokenRepository.deleteByUser(user);
             log.info("Deleted any existing tokens for user");
 
-            // 3. Tạo token reset mới
-            String token = UUID.randomUUID().toString();
+            // 3. Tạo mã xác nhận (6 chữ số)
+            String verificationCode = String.format("%06d", new Random().nextInt(999999));
+
+            // 4. Tạo đối tượng token
             PasswordResetToken resetToken = new PasswordResetToken();
-            resetToken.setToken(token);
+            resetToken.setToken(verificationCode);
             resetToken.setUser(user);
-            resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
-            
-            // 4. Lưu token mới
-            PasswordResetToken savedToken = tokenRepository.save(resetToken);
-            log.info("Saved new reset token: {}", savedToken.getToken());
-            
-            // 5. Gửi email
-            String resetLink = "https://your-frontend.com/reset-password?token=" + token;
-            String body = """
-                Xin chào %s,
-                
-                Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng nhấn vào liên kết sau để đặt lại mật khẩu (có hiệu lực trong 15 phút):
 
-                %s
+            // Cập nhật thời gian hết hạn 15 phút sau
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, 15);
+            resetToken.setExpiryDate(calendar.getTime());
 
-                Nếu bạn không yêu cầu, hãy bỏ qua email này.
-                """.formatted(user.getEmail(), resetLink);
+//            // 5. Lưu token
+//            passwordResetTokenRepository.save(resetToken);
+//            log.info("Saved verification code: {}", verificationCode);
 
-            emailService.send(user.getEmail(), "Yêu cầu đặt lại mật khẩu", body);
-            log.info("Sent reset password email to: {}", user.getEmail());
-            
+            // 6. Gửi mã xác nhận qua email
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(user.getEmail());
+            helper.setSubject("Mã xác nhận đặt lại mật khẩu");
+            helper.setText(
+                    "<p>Chào " + user.getFirst_name() + " " + user.getLast_name() + ",</p>" +
+                            "<p>Mã xác nhận đặt lại mật khẩu của bạn là: <b>" + verificationCode + "</b></p>" +
+                            "<p>Mã này có hiệu lực trong 15 phút.</p>" +
+                            "<p>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>",
+                    true
+            );
+
+            mailSender.send(message);
+            log.info("Verification code email sent to: {}", user.getEmail());
+
             return userMapper.toUserResponse(user);
+
         } catch (Exception e) {
             log.error("Error during password reset process: ", e);
             throw e;
         }
+    }
+
+    // ✅ Hàm kiểm tra mã xác nhận
+    public boolean verifyCode(String email, String inputCode) {
+        PasswordResetToken codeData = verificationCodes.get(email);
+        return codeData != null &&
+                codeData.getToken().equals(inputCode) &&
+                codeData.getExpiryDate().after(new Date());
     }
 
     @Transactional
@@ -83,30 +109,53 @@ public class PasswordResetService {
         log.info("Starting password reset with token: {}", token);
         try {
             // 1. Kiểm tra token có tồn tại và chưa hết hạn
-            PasswordResetToken resetToken = tokenRepository.findByToken(token)
+            PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
                     .orElseThrow(() -> new AppException(ErrorCode.INVALID_TOKEN));
             log.info("Found valid reset token for user: {}", resetToken.getUser().getEmail());
 
-            if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-                tokenRepository.delete(resetToken);
+            if (resetToken.getExpiryDate().before(new Date())) {
+                passwordResetTokenRepository.delete(resetToken);
                 throw new AppException(ErrorCode.TOKEN_EXPIRED);
             }
 
-            // 2. Kiểm tra mật khẩu mới và xác nhận mật khẩu
-            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-                throw new AppException(ErrorCode.PASSWORD_MISMATCH);
-            }
-
-            // 3. Cập nhật mật khẩu mới
+            // 2. Cập nhật mật khẩu mới
             User user = resetToken.getUser();
             PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
             user.setPassword(passwordEncoder.encode(request.getNewPassword()));
             userRepository.save(user);
             log.info("Updated password for user: {}", user.getEmail());
 
-            // 4. Xóa token đã sử dụng
-            tokenRepository.delete(resetToken);
+            // 3. Xóa token đã sử dụng
+            passwordResetTokenRepository.delete(resetToken);
             log.info("Deleted used reset token");
+
+            return userMapper.toUserResponse(user);
+        } catch (Exception e) {
+            log.error("Error during password reset: ", e);
+            throw e;
+        }
+    }
+
+
+    @Transactional
+    public UserResponse resetPassword(String newPassword) {
+        log.info("Starting password reset");
+        try {
+            // 1. Get current user from security context
+            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (user == null) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            // 2. Update password
+            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            log.info("Updated password for user: {}", user.getEmail());
+
+            // 3. Delete any existing reset tokens
+            passwordResetTokenRepository.deleteByUser(user);
+            log.info("Deleted reset tokens for user: {}", user.getEmail());
 
             return userMapper.toUserResponse(user);
         } catch (Exception e) {

@@ -1,6 +1,8 @@
 package com.example.myevent_be.controller;
 
+import com.example.myevent_be.dto.request.DeviceRentalUpdateRequest;
 import com.example.myevent_be.dto.request.TimelineRequest;
+import com.example.myevent_be.dto.request.TimelineUpdateRequest;
 import com.example.myevent_be.dto.response.*;
 import com.example.myevent_be.service.TimelineService;
 import jakarta.validation.Valid;
@@ -66,7 +68,7 @@ public class TimelineController {
     @PatchMapping("/{id}")
     public ApiResponse<TimelineResponse> updateDeviceRental(
             @PathVariable String id,
-            @Valid @RequestBody TimelineRequest request) {
+            @Valid @RequestBody TimelineUpdateRequest request) {
         log.info("Request update time line with id: {}", id);
         TimelineResponse timelineResponse = timelineService.updatrTimeLine(id, request);
         return ApiResponse.<TimelineResponse>builder()
